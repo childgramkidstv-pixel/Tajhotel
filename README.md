@@ -1,0 +1,2 @@
+# tajhotel
+TAJ HOTEL MENU
