@@ -1,0 +1,22 @@
+{
+  "name": "taj-hotel",
+  "version": "1.0.0",
+  "description": "A professional, luxurious single-page digital menu card system for Taj Hotel restaurant with Airtable integration for order management and event bookings.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "vercel": "^50.39.0"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.1",
+    "node-fetch": "^3.3.2"
+  }
+}

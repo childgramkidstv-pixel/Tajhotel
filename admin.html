@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taj Hotel - Admin Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gold: { 400: '#F5A94B', 500: '#D4722A', 600: '#B85A22' },
+                        dark: { 400: '#1A2A3A', 500: '#0F1B2D', 600: '#081020' }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #0F1B2D; color: #E8EDF2; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #1A2A3A; }
+        ::-webkit-scrollbar-thumb { background: #D4722A; border-radius: 3px; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .animate-fade { animation: fadeIn 0.3s ease-out; }
+        .spinner { border: 3px solid rgba(212, 114, 42, 0.2); border-top: 3px solid #D4722A; border-radius: 50%; width: 24px; height: 24px; animation: spin 0.8s linear infinite; }
+        .tab-btn.active { background: #D4722A; color: #0F1B2D; }
+        .input-field { background: #1A2A3A; border: 1px solid #2C3E50; color: #E8EDF2; border-radius: 8px; padding: 10px 14px; width: 100%; }
+        .input-field:focus { border-color: #D4722A; outline: none; box-shadow: 0 0 0 2px rgba(212, 114, 42, 0.2); }
+        .veg-dot { min-width: 52px; height: 22px; border: 2px solid #10B981; display: inline-flex; align-items: center; justify-content: center; gap: 4px; border-radius: 3px; padding: 0 6px; background: rgba(15, 27, 45, 0.5); }
+        .veg-dot::after { content: ''; width: 8px; height: 8px; background: #10B981; border-radius: 50%; flex-shrink: 0; }
+        .veg-dot .badge-text { font-size: 10px; font-weight: 700; color: #10B981; white-space: nowrap; }
+        .nonveg-dot { min-width: 64px; height: 22px; border: 2px solid #EF4444; display: inline-flex; align-items: center; justify-content: center; gap: 4px; border-radius: 3px; padding: 0 6px; background: rgba(15, 27, 45, 0.5); }
+        .nonveg-dot::after { content: ''; width: 8px; height: 8px; background: #EF4444; border-radius: 50%; flex-shrink: 0; }
+        .nonveg-dot .badge-text { font-size: 10px; font-weight: 700; color: #EF4444; white-space: nowrap; }
+        .status-pending { background: rgba(245, 158, 11, 0.2); color: #F59E0B; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+        .status-preparing { background: rgba(59, 130, 246, 0.2); color: #3B82F6; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+        .status-ready { background: rgba(16, 185, 129, 0.2); color: #10B981; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+        .status-completed { background: rgba(107, 114, 128, 0.2); color: #6B7280; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+        .menu-filter-btn.active { background: #D4722A; color: #0F1B2D; border-color: #D4722A; }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Header -->
+    <header class="bg-dark-500 border-b border-gold-500/20 sticky top-0 z-40">
+        <div class="px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center">
+                    <span class="text-dark-500 font-bold">A</span>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-gold-500">Admin Panel</h1>
+                    <p class="text-xs text-gray-400">Restaurant Management</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <a href="index.html" class="text-sm text-gold-500 hover:text-gold-400">Menu</a>
+                <a href="kitchen.html" class="text-sm text-gray-400 hover:text-gold-500">Kitchen</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Tabs -->
+    <div class="bg-dark-500 border-b border-gold-500/10 px-4 py-2">
+        <div class="flex gap-2 overflow-x-auto">
+            <button onclick="switchTab('dashboard')" class="tab-btn active px-5 py-2 rounded-full text-sm font-medium bg-dark-400 text-gray-300 border border-gray-600 whitespace-nowrap" data-tab="dashboard">Dashboard</button>
+            <button onclick="switchTab('menu')" class="tab-btn px-5 py-2 rounded-full text-sm font-medium bg-dark-400 text-gray-300 border border-gray-600 whitespace-nowrap" data-tab="menu">Menu View</button>
+            <button onclick="switchTab('orders')" class="tab-btn px-5 py-2 rounded-full text-sm font-medium bg-dark-400 text-gray-300 border border-gray-600 whitespace-nowrap" data-tab="orders">All Orders</button>
+        </div>
+    </div>
+
+    <!-- Dashboard Tab -->
+    <div id="tab-dashboard" class="tab-content p-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="bg-dark-400 rounded-xl p-5 border border-gold-500/10">
+                <p class="text-gray-400 text-sm">Today's Revenue</p>
+                <p class="text-3xl font-bold text-gold-500 mt-2">₹<span id="stat-revenue">0</span></p>
+            </div>
+            <div class="bg-dark-400 rounded-xl p-5 border border-gold-500/10">
+                <p class="text-gray-400 text-sm">Total Orders Today</p>
+                <p class="text-3xl font-bold text-white mt-2" id="stat-orders">0</p>
+            </div>
+            <div class="bg-dark-400 rounded-xl p-5 border border-gold-500/10">
+                <p class="text-gray-400 text-sm">Pending Orders</p>
+                <p class="text-3xl font-bold text-yellow-500 mt-2" id="stat-pending">0</p>
+            </div>
+            <div class="bg-dark-400 rounded-xl p-5 border border-gold-500/10">
+                <p class="text-gray-400 text-sm">Avg Order Value</p>
+                <p class="text-3xl font-bold text-green-500 mt-2">₹<span id="stat-avg">0</span></p>
+            </div>
+        </div>
+
+        <div class="bg-dark-400 rounded-xl border border-gold-500/10 overflow-hidden">
+            <div class="flex items-center justify-between p-4 border-b border-gold-500/10">
+                <h3 class="font-semibold text-gold-500">Recent Orders</h3>
+                <span class="text-xs text-gray-400" id="last-updated">Updated: Just now</span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="text-left text-xs text-gray-400 border-b border-gold-500/10">
+                            <th class="p-3">Order ID</th>
+                            <th class="p-3">Customer</th>
+                            <th class="p-3">Table</th>
+                            <th class="p-3">Amount</th>
+                            <th class="p-3">Status</th>
+                            <th class="p-3">Time</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recent-orders-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Menu View Tab (Display Only) -->
+    <div id="tab-menu" class="tab-content p-4 hidden">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold text-gold-500">Current Menu</h2>
+            <span class="text-sm text-gray-400" id="menu-count">Loading...</span>
+        </div>
+
+        <div class="flex flex-wrap gap-2 mb-4">
+            <button onclick="filterMenu('all')" class="menu-filter-btn active px-3 py-1.5 rounded-full text-xs font-medium bg-dark-400 text-gold-500 border border-gold-500" data-cat="all">All</button>
+            <button onclick="filterMenu('starters')" class="menu-filter-btn px-3 py-1.5 rounded-full text-xs font-medium bg-dark-400 text-gray-300 border border-gray-600" data-cat="starters">Starters</button>
+            <button onclick="filterMenu('main-veg')" class="menu-filter-btn px-3 py-1.5 rounded-full text-xs font-medium bg-dark-400 text-gray-300 border border-gray-600" data-cat="main-veg">Main Veg</button>
+            <button onclick="filterMenu('main-nonveg')" class="menu-filter-btn px-3 py-1.5 rounded-full text-xs font-medium bg-dark-400 text-gray-300 border border-gray-600" data-cat="main-nonveg">Main Non-Veg</button>
+            <button onclick="filterMenu('breads')" class="menu-filter-btn px-3 py-1.5 rounded-full text-xs font-medium bg-dark-400 text-gray-300 border border-gray-600" data-cat="breads">Breads</button>
+            <button onclick="filterMenu('desserts')" class="menu-filter-btn px-3 py-1.5 rounded-full text-xs font-medium bg-dark-400 text-gray-300 border border-gray-600" data-cat="desserts">Desserts</button>
+            <button onclick="filterMenu('beverages')" class="menu-filter-btn px-3 py-1.5 rounded-full text-xs font-medium bg-dark-400 text-gray-300 border border-gray-600" data-cat="beverages">Beverages</button>
+        </div>
+
+        <div class="bg-dark-400 rounded-xl border border-gold-500/10 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="text-left text-xs text-gray-400 border-b border-gold-500/10">
+                            <th class="p-3">Type</th>
+                            <th class="p-3">Name</th>
+                            <th class="p-3">Description</th>
+                            <th class="p-3">Category</th>
+                            <th class="p-3">Full Price</th>
+                            <th class="p-3">Half Price</th>
+                            <th class="p-3">In Stock</th>
+                        </tr>
+                    </thead>
+                    <tbody id="menu-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- All Orders Tab -->
+    <div id="tab-orders" class="tab-content p-4 hidden">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold text-gold-500">All Orders</h2>
+            <div class="flex gap-2">
+                <select id="order-status-filter" onchange="fetchAdminOrders()" class="input-field text-sm py-1.5 px-3 w-auto">
+                    <option value="all">All Status</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Preparing">Preparing</option>
+                    <option value="Ready">Ready</option>
+                    <option value="Completed">Completed</option>
+                </select>
+                <input type="date" id="order-date-filter" onchange="fetchAdminOrders()" class="input-field text-sm py-1.5 px-3 w-auto">
+            </div>
+        </div>
+
+        <div class="bg-dark-400 rounded-xl border border-gold-500/10 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="text-left text-xs text-gray-400 border-b border-gold-500/10">
+                            <th class="p-3">Order ID</th>
+                            <th class="p-3">Customer</th>
+                            <th class="p-3">Table</th>
+                            <th class="p-3">Items</th>
+                            <th class="p-3">Total</th>
+                            <th class="p-3">Status</th>
+                            <th class="p-3">Date/Time</th>
+                        </tr>
+                    </thead>
+                    <tbody id="all-orders-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let menuItems = [];
+        let allOrders = [];
+        let currentMenuFilter = 'all';
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(`tab-${tab}`).classList.remove('hidden');
+            document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+            
+            if (tab === 'dashboard') fetchDashboardData();
+            if (tab === 'menu') fetchMenuItems();
+            if (tab === 'orders') fetchAdminOrders();
+        }
+
+        async function fetchDashboardData() {
+            try {
+                const response = await fetch('/api/order-status');
+                if (!response.ok) throw new Error('Failed to fetch');
+                const data = await response.json();
+                allOrders = data.orders || [];
+
+                const today = new Date().toDateString();
+                const todayOrders = allOrders.filter(o => {
+                    if (!o['Order Timestamp']) return false;
+                    return new Date(o['Order Timestamp']).toDateString() === today;
+                });
+
+                const totalRevenue = todayOrders.reduce((sum, o) => sum + (o['Total Amount'] || 0), 0);
+                const avgOrderValue = todayOrders.length > 0 ? totalRevenue / todayOrders.length : 0;
+                const pendingCount = allOrders.filter(o => o['Order Status'] === 'Pending' || o['Order Status'] === 'Preparing').length;
+
+                document.getElementById('stat-revenue').textContent = totalRevenue.toLocaleString('en-IN');
+                document.getElementById('stat-orders').textContent = todayOrders.length;
+                document.getElementById('stat-pending').textContent = pendingCount;
+                document.getElementById('stat-avg').textContent = Math.round(avgOrderValue).toLocaleString('en-IN');
+
+                const recent = allOrders.slice(0, 10);
+                const tbody = document.getElementById('recent-orders-body');
+                tbody.innerHTML = recent.map(order => `
+                    <tr class="border-b border-gray-700/30 hover:bg-dark-500/50">
+                        <td class="p-3 text-sm font-mono text-gold-500">${order['Order Id'] || 'N/A'}</td>
+                        <td class="p-3 text-sm">${order['Customer Name'] || 'N/A'}</td>
+                        <td class="p-3 text-sm">${order['Table Number'] || 'N/A'}</td>
+                        <td class="p-3 text-sm font-semibold">₹${(order['Total Amount'] || 0).toFixed(2)}</td>
+                        <td class="p-3"><span class="status-${(order['Order Status'] || 'Pending').toLowerCase()}">${order['Order Status'] || 'Pending'}</span></td>
+                        <td class="p-3 text-xs text-gray-400">${formatOrderTime(order['Order Timestamp'])}</td>
+                    </tr>
+                `).join('');
+                
+                document.getElementById('last-updated').textContent = `Updated: ${new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' })}`;
+            } catch (error) {
+                console.error('Dashboard fetch error:', error);
+            }
+        }
+
+        async function fetchMenuItems() {
+            try {
+                const response = await fetch('/api/menu');
+                if (!response.ok) throw new Error('Failed to fetch menu');
+                const data = await response.json();
+                menuItems = data.items || [];
+                renderMenuTable();
+                document.getElementById('menu-count').textContent = `${menuItems.length} dishes available`;
+            } catch (error) {
+                console.error('Menu fetch error:', error);
+                document.getElementById('menu-count').textContent = 'Failed to load menu';
+                renderMenuTable();
+            }
+        }
+
+        function renderMenuTable() {
+            const filtered = currentMenuFilter === 'all' ? menuItems : menuItems.filter(i => i['Category'] === currentMenuFilter);
+            const tbody = document.getElementById('menu-table-body');
+            
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-gray-500">No menu items found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(item => `
+                <tr class="border-b border-gray-700/30 hover:bg-dark-500/50">
+                    <td class="p-3">${item['Is Veg'] ? '<span class="veg-dot"><span class="badge-text">Veg</span></span>' : '<span class="nonveg-dot"><span class="badge-text">Non-Veg</span></span>'}</td>
+                    <td class="p-3">
+                        <div>
+                            <p class="font-medium text-sm">${item['Name']}</p>
+                            <div class="flex gap-2 mt-1">
+                                ${item['Is Popular'] ? '<span class="text-[10px] bg-gold-500/20 text-gold-500 px-1.5 py-0.5 rounded">Popular</span>' : ''}
+                                ${item['Is Chef Special'] ? '<span class="text-[10px] bg-gold-500/30 text-gold-400 px-1.5 py-0.5 rounded">Chef\'s</span>' : ''}
+                            </div>
+                        </div>
+                    </td>
+                    <td class="p-3 text-sm text-gray-400 max-w-[200px] truncate">${item['Description'] || '-'}</td>
+                    <td class="p-3 text-sm text-gray-400 capitalize">${item['Category'] || 'N/A'}</td>
+                    <td class="p-3 text-sm font-semibold">₹${item['Full Price'] || 0}</td>
+                    <td class="p-3 text-sm text-gray-400">${item['Half Price'] ? '₹' + item['Half Price'] : '-'}</td>
+                    <td class="p-3 text-sm">${item['In Stock'] !== false ? '<span class="text-green-400">Yes</span>' : '<span class="text-red-400">No</span>'}</td>
+                </tr>
+            `).join('');
+        }
+
+        function filterMenu(cat) {
+            currentMenuFilter = cat;
+            document.querySelectorAll('.menu-filter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.cat === cat);
+                if (btn.dataset.cat === cat) { btn.classList.add('border-gold-500', 'text-gold-500'); btn.classList.remove('border-gray-600', 'text-gray-300'); }
+                else { btn.classList.remove('border-gold-500', 'text-gold-500'); btn.classList.add('border-gray-600', 'text-gray-300'); }
+            });
+            renderMenuTable();
+        }
+
+        async function fetchAdminOrders() {
+            try {
+                const statusFilter = document.getElementById('order-status-filter').value;
+                const dateFilter = document.getElementById('order-date-filter').value;
+                
+                const response = await fetch('/api/order-status');
+                if (!response.ok) throw new Error('Failed');
+                const data = await response.json();
+                allOrders = data.orders || [];
+
+                let filtered = allOrders;
+                if (statusFilter !== 'all') {
+                    filtered = filtered.filter(o => o['Order Status'] === statusFilter);
+                }
+                if (dateFilter) {
+                    filtered = filtered.filter(o => {
+                        if (!o['Order Timestamp']) return false;
+                        return o['Order Timestamp'].startsWith(dateFilter);
+                    });
+                }
+
+                const tbody = document.getElementById('all-orders-body');
+                if (filtered.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-gray-500">No orders found</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = filtered.map(order => `
+                    <tr class="border-b border-gray-700/30 hover:bg-dark-500/50">
+                        <td class="p-3 text-xs font-mono text-gold-500">${order['Order Id'] || 'N/A'}</td>
+                        <td class="p-3 text-sm">${order['Customer Name'] || 'N/A'}</td>
+                        <td class="p-3 text-sm">${order['Table Number'] || 'N/A'}</td>
+                        <td class="p-3 text-xs max-w-[200px] truncate" title="${order['Ordered Items'] || 'N/A'}">${order['Ordered Items'] || 'N/A'}</td>
+                        <td class="p-3 text-sm font-semibold">₹${(order['Total Amount'] || 0).toFixed(2)}</td>
+                        <td class="p-3"><span class="status-${(order['Order Status'] || 'Pending').toLowerCase()}">${order['Order Status'] || 'Pending'}</span></td>
+                        <td class="p-3 text-xs text-gray-400">${formatOrderTime(order['Order Timestamp'])}</td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Orders fetch error:', error);
+            }
+        }
+
+        function formatOrderTime(timestamp) {
+            if (!timestamp) return 'N/A';
+            const date = new Date(timestamp);
+            return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', timeZone: 'Asia/Kolkata' }) + ' ' + 
+                   date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' });
+        }
+
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'fixed top-20 right-4 bg-dark-400 border-l-4 border-gold-500 px-4 py-3 rounded-lg shadow-lg z-50 animate-fade';
+            toast.innerHTML = `<span class="text-sm">${message}</span>`;
+            document.body.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(() => toast.remove(), 300); }, 3000);
+        }
+
+        setInterval(() => {
+            if (!document.getElementById('tab-dashboard').classList.contains('hidden')) {
+                fetchDashboardData();
+            }
+        }, 10000);
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchDashboardData();
+        });
+    </script>
+</body>
+</html>

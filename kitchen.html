@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taj Hotel - Kitchen Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gold: { 400: '#F5A94B', 500: '#D4722A', 600: '#B85A22' },
+                        dark: { 400: '#1A2A3A', 500: '#0F1B2D', 600: '#081020' },
+                        status: { pending: '#F59E0B', preparing: '#3B82F6', ready: '#10B981', completed: '#6B7280' }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #0F1B2D; color: #E8EDF2; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #1A2A3A; }
+        ::-webkit-scrollbar-thumb { background: #D4722A; border-radius: 3px; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        @keyframes slideIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes blink { 0%, 100% { background: #EF4444; } 50% { background: #DC2626; } }
+        .animate-fade { animation: fadeIn 0.3s ease-out; }
+        .animate-slide { animation: slideIn 0.3s ease-out; }
+        .animate-pulse { animation: pulse 1.5s infinite; }
+        .animate-blink { animation: blink 0.5s infinite; }
+        .order-card { transition: all 0.3s ease; }
+        .order-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
+        .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .status-pending { background: rgba(245, 158, 11, 0.2); color: #F59E0B; border: 1px solid #F59E0B; }
+        .status-preparing { background: rgba(59, 130, 246, 0.2); color: #3B82F6; border: 1px solid #3B82F6; }
+        .status-ready { background: rgba(16, 185, 129, 0.2); color: #10B981; border: 1px solid #10B981; }
+        .status-completed { background: rgba(107, 114, 128, 0.2); color: #6B7280; border: 1px solid #6B7280; }
+        .item-btn { transition: all 0.2s ease; cursor: pointer; }
+        .item-btn:active { transform: scale(0.95); }
+        .new-order-alert { border-left: 4px solid #EF4444; }
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 16px; }
+        @media (max-width: 768px) { .dashboard-grid { grid-template-columns: 1fr; } }
+        .filter-btn.active { background: #D4722A; color: #0F1B2D; }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Header -->
+    <header class="bg-dark-500 border-b border-gold-500/20 sticky top-0 z-50">
+        <div class="px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center">
+                    <span class="text-dark-500 font-bold">K</span>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-gold-500">Kitchen Dashboard</h1>
+                    <p class="text-xs text-gray-400" id="connection-status">Connecting...</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <button onclick="toggleSound()" id="sound-btn" class="p-2 rounded-lg bg-dark-400 hover:bg-gold-500/20 transition-colors" title="Toggle Sound">
+                    <svg id="sound-icon-on" class="w-5 h-5 text-gold-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
+                    </svg>
+                    <svg id="sound-icon-off" class="w-5 h-5 text-gray-500 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9l4 4m0-4l-4 4"/>
+                    </svg>
+                </button>
+                <button onclick="refreshOrders()" class="p-2 rounded-lg bg-dark-400 hover:bg-gold-500/20 transition-colors" title="Refresh">
+                    <svg id="refresh-icon" class="w-5 h-5 text-gold-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                </button>
+                <a href="index.html" class="text-sm text-gold-500 hover:text-gold-400">Menu</a>
+                <a href="admin.html" class="text-sm text-gray-400 hover:text-gold-500">Admin</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Stats Bar -->
+    <div class="bg-dark-400 border-b border-gold-500/10 px-4 py-2">
+        <div class="flex items-center gap-6 overflow-x-auto">
+            <div class="flex items-center gap-2">
+                <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                <span class="text-sm text-gray-400">Pending: <span id="count-pending" class="text-white font-bold">0</span></span>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="w-3 h-3 rounded-full bg-blue-500"></div>
+                <span class="text-sm text-gray-400">Preparing: <span id="count-preparing" class="text-white font-bold">0</span></span>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                <span class="text-sm text-gray-400">Ready: <span id="count-ready" class="text-white font-bold">0</span></span>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="w-3 h-3 rounded-full bg-gray-500"></div>
+                <span class="text-sm text-gray-400">Completed: <span id="count-completed" class="text-white font-bold">0</span></span>
+            </div>
+            <div class="border-l border-gray-600 h-4 ml-2"></div>
+            <div class="flex items-center gap-2">
+                <span class="text-sm text-gray-400">Total Orders: <span id="count-total" class="text-white font-bold">0</span></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-dark-500 border-b border-gold-500/10 px-4 py-3">
+        <div class="flex flex-wrap items-center gap-2">
+            <span class="text-sm text-gray-400 mr-2">Filter:</span>
+            <button onclick="filterOrders('all')" class="filter-btn active px-4 py-1.5 rounded-full text-sm font-medium bg-dark-400 text-gray-300 border border-gray-600 hover:border-gold-500 transition-all" data-filter="all">All Orders</button>
+            <button onclick="filterOrders('Pending')" class="filter-btn px-4 py-1.5 rounded-full text-sm font-medium bg-dark-400 text-gray-300 border border-gray-600 hover:border-gold-500 transition-all" data-filter="Pending">Pending</button>
+            <button onclick="filterOrders('Preparing')" class="filter-btn px-4 py-1.5 rounded-full text-sm font-medium bg-dark-400 text-gray-300 border border-gray-600 hover:border-gold-500 transition-all" data-filter="Preparing">Preparing</button>
+            <button onclick="filterOrders('Ready')" class="filter-btn px-4 py-1.5 rounded-full text-sm font-medium bg-dark-400 text-gray-300 border border-gray-600 hover:border-gold-500 transition-all" data-filter="Ready">Ready</button>
+            <button onclick="filterOrders('Completed')" class="filter-btn px-4 py-1.5 rounded-full text-sm font-medium bg-dark-400 text-gray-300 border border-gray-600 hover:border-gold-500 transition-all" data-filter="Completed">Completed</button>
+            <div class="ml-auto">
+                <label class="flex items-center gap-2 text-sm text-gray-400 cursor-pointer">
+                    <input type="checkbox" id="group-items" class="accent-gold-500" onchange="renderOrders()">
+                    Group identical items
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="p-4">
+        <div id="orders-container" class="dashboard-grid">
+            <!-- Orders will be rendered here -->
+        </div>
+        <div id="empty-state" class="hidden text-center py-16">
+            <svg class="w-20 h-20 mx-auto text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            </svg>
+            <p class="text-gray-400 text-lg">No orders to display</p>
+            <p class="text-gray-600 text-sm mt-2">Orders will appear here when customers place them</p>
+        </div>
+    </main>
+
+    <script>
+        // State
+        let allOrders = [];
+        let allOrderItems = [];
+        let soundEnabled = true;
+        let currentFilter = 'all';
+        let lastPollTime = Date.now();
+        let previousOrderCount = 0;
+
+        // Audio context for sound alert
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playNotificationSound() {
+            if (!soundEnabled) return;
+            
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+            oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
+            oscillator.frequency.setValueAtTime(800, audioContext.currentTime + 0.2);
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.setValueAtTime(0, audioContext.currentTime + 0.3);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.3);
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('sound-icon-on').classList.toggle('hidden', !soundEnabled);
+            document.getElementById('sound-icon-off').classList.toggle('hidden', soundEnabled);
+        }
+
+        async function fetchOrders() {
+            try {
+                const statusFilter = currentFilter !== 'all' ? currentFilter : '';
+                const response = await fetch(`/api/order-status?status=${statusFilter}`);
+                
+                if (!response.ok) throw new Error('Failed to fetch orders');
+                
+                const data = await response.json();
+                previousOrderCount = allOrders.length;
+                allOrders = data.orders || [];
+                
+                // Filter to only include order items that belong to visible orders
+                const orderIds = allOrders.map(o => o.id);
+                allOrderItems = (data.orderItems || []).filter(item => {
+                    // Check if item's Order link matches any visible order
+                    if (item.Order && item.Order.length > 0) {
+                        return orderIds.includes(item.Order[0]);
+                    }
+                    return false;
+                });
+                
+                updateStats();
+                renderOrders();
+                document.getElementById('connection-status').innerHTML = '<span class="text-green-400">Connected</span>';
+                
+                // Check for new orders and play sound
+                if (allOrders.length > previousOrderCount && previousOrderCount > 0) {
+                    playNotificationSound();
+                }
+                
+            } catch (error) {
+                console.error('Fetch error:', error);
+                document.getElementById('connection-status').innerHTML = '<span class="text-red-400">Disconnected - Retrying...</span>';
+            }
+        }
+
+        function updateStats() {
+            const orders = allOrders;
+            const counts = { Pending: 0, Preparing: 0, Ready: 0, Completed: 0 };
+            orders.forEach(order => {
+                const status = order['Order Status'];
+                if (counts[status] !== undefined) counts[status]++;
+            });
+            document.getElementById('count-pending').textContent = counts.Pending;
+            document.getElementById('count-preparing').textContent = counts.Preparing;
+            document.getElementById('count-ready').textContent = counts.Ready;
+            document.getElementById('count-completed').textContent = counts.Completed;
+            document.getElementById('count-total').textContent = orders.length;
+        }
+
+        function filterOrders(status) {
+            currentFilter = status;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.filter === status);
+            });
+            fetchOrders();
+        }
+
+        function getStatusClass(status) {
+            switch(status) {
+                case 'Pending': return 'status-pending';
+                case 'Preparing': return 'status-preparing';
+                case 'Ready': return 'status-ready';
+                case 'Completed': return 'status-completed';
+                default: return 'status-pending';
+            }
+        }
+
+        function formatTime(timestamp) {
+            if (!timestamp) return '';
+            const date = new Date(timestamp);
+            return date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' });
+        }
+
+        function formatDate(timestamp) {
+            if (!timestamp) return '';
+            const date = new Date(timestamp);
+            return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', timeZone: 'Asia/Kolkata' });
+        }
+
+        function renderOrders() {
+            const container = document.getElementById('orders-container');
+            const emptyState = document.getElementById('empty-state');
+            
+            const orders = currentFilter === 'all' 
+                ? allOrders 
+                : allOrders.filter(o => o['Order Status'] === currentFilter);
+
+            if (orders.length === 0) {
+                container.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            const groupItems = document.getElementById('group-items').checked;
+
+            let html = '';
+            orders.forEach(order => {
+                const status = order['Order Status'] || 'Pending';
+                const orderId = order['Order Id'] || 'N/A';
+                const customerName = order['Customer Name'] || '';
+                const tableNumber = order['Table Number'] || '';
+                const totalAmount = order['Total Amount'] || 0;
+                const notes = order['Notes Request'] || '';
+                const timestamp = order['Order Timestamp'] || '';
+                const isNew = isNewOrder(timestamp);
+
+                // Get items for this order
+                const orderItems = allOrderItems.filter(item => {
+                    if (item.Order && item.Order.length > 0) {
+                        return item.Order[0] === order.id;
+                    }
+                    return false;
+                });
+
+                let itemsHtml = '';
+                if (groupItems && orderItems.length > 0) {
+                    // Group identical items
+                    const grouped = {};
+                    orderItems.forEach(item => {
+                        const key = `${item['Dish Name']}_${item['Variant'] || 'Full'}`;
+                        if (!grouped[key]) {
+                            grouped[key] = { 
+                                name: item['Dish Name'], 
+                                variant: item['Variant'] || 'Full', 
+                                quantity: 0, 
+                                items: [],
+                                status: item['Item Status'] || 'Pending'
+                            };
+                        }
+                        grouped[key].quantity += item['Quantity'] || 1;
+                        grouped[key].items.push(item);
+                    });
+                    
+                    itemsHtml = Object.values(grouped).map(item => `
+                        <div class="flex items-center justify-between p-3 bg-dark-600 rounded-lg animate-fade">
+                            <div class="flex items-center gap-3 flex-1">
+                                <span class="text-gold-500 font-bold text-lg w-8">${item.quantity}x</span>
+                                <div>
+                                    <p class="font-medium text-sm">${item.name}</p>
+                                    <span class="text-xs text-gray-500">${item.variant}</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="status-badge ${getStatusClass(item.status)}">${item.status}</span>
+                                ${item.status === 'Pending' ? `<button onclick="updateItemStatus('${item.items[0].id}', 'Preparing')" class="item-btn px-3 py-1 bg-blue-600 text-white text-xs rounded-full hover:bg-blue-500">Start</button>` : ''}
+                                ${item.status === 'Preparing' ? `<button onclick="updateItemStatus('${item.items[0].id}', 'Prepared')" class="item-btn px-3 py-1 bg-green-600 text-white text-xs rounded-full hover:bg-green-500">Done</button>` : ''}
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    itemsHtml = orderItems.map(item => `
+                        <div class="flex items-center justify-between p-3 bg-dark-600 rounded-lg animate-fade">
+                            <div class="flex items-center gap-3">
+                                <span class="text-gold-500 font-bold text-sm">${item['Quantity'] || 1}x</span>
+                                <div>
+                                    <p class="font-medium text-sm">${item['Dish Name']}</p>
+                                    <span class="text-xs text-gray-500">${item['Variant'] || 'Full'}</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="status-badge ${getStatusClass(item['Item Status'] || 'Pending')}">${item['Item Status'] || 'Pending'}</span>
+                                ${(item['Item Status'] || 'Pending') === 'Pending' ? `<button onclick="updateItemStatus('${item.id}', 'Preparing')" class="item-btn px-3 py-1 bg-blue-600 text-white text-xs rounded-full hover:bg-blue-500">Start</button>` : ''}
+                                ${(item['Item Status'] || 'Pending') === 'Preparing' ? `<button onclick="updateItemStatus('${item.id}', 'Prepared')" class="item-btn px-3 py-1 bg-green-600 text-white text-xs rounded-full hover:bg-green-500">Done</button>` : ''}
+                            </div>
+                        </div>
+                    `).join('');
+                }
+
+                html += `
+                    <div class="order-card bg-dark-400 rounded-xl border border-gold-500/10 overflow-hidden animate-slide ${isNew ? 'new-order-alert' : ''}">
+                        <!-- Order Header -->
+                        <div class="flex items-center justify-between p-4 border-b border-gold-500/10 ${isNew ? 'animate-blink' : 'bg-dark-600/50'} rounded-t-xl">
+                            <div class="flex items-center gap-3">
+                                ${isNew ? '<span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>' : ''}
+                                <div>
+                                    <p class="font-semibold">${customerName}</p>
+                                    <p class="text-xs text-gray-400">${tableNumber} | ${formatDate(timestamp)} ${formatTime(timestamp)}</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="status-badge ${getStatusClass(status)}">${status}</span>
+                                <p class="text-xs text-gold-500 mt-1">₹${totalAmount.toFixed(2)}</p>
+                            </div>
+                        </div>
+                        
+                        ${notes ? `<div class="px-4 py-2 bg-yellow-900/20 border-b border-yellow-500/20"><p class="text-xs text-yellow-500">Note: ${notes}</p></div>` : ''}
+                        
+                        <!-- Order Items -->
+                        <div class="p-4 space-y-2">
+                            ${itemsHtml || '<p class="text-gray-500 text-sm text-center py-4">No items found</p>'}
+                        </div>
+                        
+                        <!-- Order Actions -->
+                        <div class="flex gap-2 p-4 border-t border-gold-500/10">
+                            ${status === 'Pending' ? `<button onclick="updateOrderStatus('${order.id}', 'Preparing')" class="flex-1 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-500 transition-colors">Start Preparing</button>` : ''}
+                            ${status === 'Preparing' ? `<button onclick="updateOrderStatus('${order.id}', 'Ready')" class="flex-1 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-500 transition-colors">Mark Ready</button>` : ''}
+                            ${status === 'Ready' ? `<button onclick="updateOrderStatus('${order.id}', 'Completed')" class="flex-1 py-2 bg-gray-600 text-white rounded-lg text-sm font-medium hover:bg-gray-500 transition-colors">Complete Order</button>` : ''}
+                            ${status === 'Completed' ? `<span class="flex-1 py-2 text-center text-gray-500 text-sm">Order Completed</span>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function isNewOrder(timestamp) {
+            if (!timestamp) return false;
+            const orderTime = new Date(timestamp).getTime();
+            return (Date.now() - orderTime) < 60000; // Within last minute
+        }
+
+        async function updateItemStatus(itemId, newStatus) {
+            try {
+                const response = await fetch('/api/order-status', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        updateType: 'item',
+                        recordId: itemId,
+                        fields: { status: newStatus, preparedTime: newStatus === 'Prepared' ? new Date().toISOString() : null }
+                    })
+                });
+
+                if (!response.ok) throw new Error('Failed to update item status');
+                
+                await fetchOrders();
+                
+                if (newStatus === 'Prepared') {
+                    showToast('Item marked as Prepared!', 'success');
+                    playNotificationSound();
+                }
+            } catch (error) {
+                console.error('Update item error:', error);
+                showToast('Failed to update item', 'error');
+            }
+        }
+
+        async function updateOrderStatus(orderId, newStatus) {
+            try {
+                const response = await fetch('/api/order-status', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        updateType: 'order',
+                        recordId: orderId,
+                        fields: { status: newStatus }
+                    })
+                });
+
+                if (!response.ok) throw new Error('Failed to update order status');
+                
+                await fetchOrders();
+                showToast(`Order status updated to ${newStatus}`, 'success');
+            } catch (error) {
+                console.error('Update order error:', error);
+                showToast('Failed to update order', 'error');
+            }
+        }
+
+        async function refreshOrders() {
+            const icon = document.getElementById('refresh-icon');
+            icon.classList.add('animate-spin');
+            // Add spin animation
+            icon.style.animation = 'spin 0.8s linear';
+            await fetchOrders();
+            setTimeout(() => { icon.style.animation = ''; }, 800);
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = 'fixed top-20 right-4 bg-dark-400 border-l-4 border-gold-500 px-4 py-3 rounded-lg shadow-lg z-50 animate-slide';
+            toast.innerHTML = `<div class="flex items-center gap-2"><svg class="w-5 h-5 ${type === 'success' ? 'text-green-400' : 'text-red-400'}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${type === 'success' ? 'M5 13l4 4L19 7' : 'M6 18L18 6M6 6l12 12'}"/></svg><span class="text-sm">${message}</span></div>`;
+            document.body.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(() => toast.remove(), 300); }, 3000);
+        }
+
+        // Auto-refresh every 5 seconds
+        setInterval(fetchOrders, 5000);
+
+        // Initial load
+        document.addEventListener('DOMContentLoaded', fetchOrders);
+    </script>
+</body>
+</html>

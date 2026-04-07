@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+    <title>Taj Hotel - Digital Menu</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gold: {
+                            50: '#FEF7ED', 100: '#FDE8C9', 200: '#F9C98A', 300: '#F5A94B',
+                            400: '#F18A1E', 500: '#D4722A', 600: '#B85A22', 700: '#8B4513',
+                            800: '#6B3410', 900: '#4A240B'
+                        },
+                        dark: {
+                            50: '#B8C5D6', 100: '#7B8FA3', 200: '#4A5F7A', 300: '#2C3E50',
+                            400: '#1A2A3A', 500: '#0F1B2D', 600: '#081020'
+                        }
+                    },
+                    fontFamily: { serif: ['Georgia', 'serif'], sans: ['Inter', 'system-ui', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #0F1B2D 0%, #1A2A3A 30%, #0F1B2D 60%, #1A2A3A 100%); color: #E8EDF2; overflow-x: hidden; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+        .font-elegant { font-family: 'Cormorant Garamond', serif; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #1A2A3A; }
+        ::-webkit-scrollbar-thumb { background: #D4722A; border-radius: 3px; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .animate-fade-in { animation: fadeIn 0.6s ease-out forwards; }
+        .animate-fade-up { animation: fadeIn 0.5s ease-out forwards; opacity: 0; }
+        .animate-slide-down { animation: slideDown 0.3s ease-out forwards; }
+        .animate-slide-up { animation: slideUp 0.4s ease-out forwards; }
+        .spin { animation: spin 0.8s linear infinite; }
+        .dish-card { transition: all 0.3s ease; background: linear-gradient(145deg, #1A2A3A 0%, #2C3E50 100%); box-shadow: 0 4px 20px rgba(44, 62, 80, 0.3); }
+        .dish-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(212, 114, 42, 0.2); border-color: rgba(212, 114, 42, 0.4); }
+        .dish-card:active { transform: translateY(-2px) scale(0.98); }
+        .category-btn.active { background: linear-gradient(135deg, #D4722A 0%, #B85A22 100%); color: #FFFFFF; border-color: #D4722A; }
+        .qty-btn { transition: all 0.2s ease; user-select: none; -webkit-tap-highlight-color: transparent; }
+        .qty-btn:active { transform: scale(0.9); }
+        .modal-overlay { background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px); }
+        .spinner { border: 3px solid rgba(212, 114, 42, 0.2); border-top: 3px solid #D4722A; border-radius: 50%; width: 24px; height: 24px; animation: spin 0.8s linear infinite; }
+        /* Veg/Non-Veg Badges with Text Labels */
+        .veg-badge { min-width: 56px; height: 24px; border: 2px solid #34D399; display: inline-flex; align-items: center; justify-content: center; gap: 5px; border-radius: 4px; padding: 0 7px; background: rgba(15, 27, 45, 0.9); }
+        .veg-badge::after { content: ''; width: 9px; height: 9px; background: #34D399; border-radius: 50%; flex-shrink: 0; }
+        .veg-badge .badge-text { font-size: 11px; font-weight: 700; color: #34D399; white-space: nowrap; letter-spacing: 0.3px; }
+        .nonveg-badge { min-width: 72px; height: 24px; border: 2px solid #F87171; display: inline-flex; align-items: center; justify-content: center; gap: 5px; border-radius: 4px; padding: 0 7px; background: rgba(15, 27, 45, 0.9); }
+        .nonveg-badge::after { content: ''; width: 9px; height: 9px; background: #F87171; border-radius: 50%; flex-shrink: 0; }
+        .nonveg-badge .badge-text { font-size: 11px; font-weight: 700; color: #F87171; white-space: nowrap; letter-spacing: 0.3px; }
+        .bottom-cart { backdrop-filter: blur(10px); background: rgba(15, 27, 45, 0.97); border-top: 1px solid rgba(212, 114, 42, 0.3); padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
+        .taj-input { background: #1A2A3A; border: 1px solid #2C3E50; color: #E8EDF2; transition: all 0.2s ease; font-size: 16px; }
+        .taj-input:focus { border-color: #D4722A; outline: none; box-shadow: 0 0 0 2px rgba(212, 114, 42, 0.2); }
+        .taj-input::placeholder { color: #7B8FA3; }
+        .hero-bg { background-image: linear-gradient(rgba(15, 27, 45, 0.8), rgba(26, 42, 58, 0.9)), url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1600'); background-size: cover; background-position: center; }
+        .toast { position: fixed; top: 100px; right: 20px; left: 20px; max-width: 400px; background: #1A2A3A; border-left: 4px solid #D4722A; padding: 12px 20px; border-radius: 8px; z-index: 10000; animation: slideDown 0.3s ease-out; }
+        .checkbox-wrapper { display: flex; align-items: center; gap: 8px; }
+        .checkbox-wrapper input[type="checkbox"] { width: 20px; height: 20px; accent-color: #D4722A; cursor: pointer; }
+        .dish-image { object-fit: cover; width: 100%; height: 170px; }
+        @media (min-width: 640px) { .dish-image { height: 190px; } }
+        @media (min-width: 768px) { .dish-image { height: 210px; } }
+        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Mobile Optimizations */
+        @media (max-width: 480px) {
+            .dish-grid { grid-template-columns: 1fr !important; gap: 0.75rem !important; }
+            .dish-card { border-radius: 14px !important; }
+            .hero-bg h2 { font-size: 2.5rem !important; }
+            .header-logo { width: 40px !important; height: 40px !important; }
+            #cart-badge { width: 18px !important; height: 18px !important; font-size: 10px !important; }
+        }
+        @media (min-width: 481px) and (max-width: 768px) {
+            .dish-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        }
+        
+        /* Receipt Scrollable Area */
+        .receipt-scroll { max-height: 45vh; overflow-y: auto; }
+        @media (max-width: 480px) {
+            .receipt-scroll { max-height: 40vh; }
+            .toast { left: 12px; right: 12px; }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- Header -->
+    <header class="fixed top-0 left-0 right-0 z-50 transition-all duration-300" id="header">
+        <div class="bg-dark-500/95 backdrop-blur-md border-b border-gold-500/20">
+            <div class="max-w-7xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between">
+                <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-shrink">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='%23C5960B'/%3E%3Ctext x='50' y='65' text-anchor='middle' font-family='Georgia,serif' font-weight='bold' font-size='50' fill='%230A0A0A'%3ET%3C/text%3E%3C/svg%3E" alt="Taj Hotel Logo" class="w-9 h-9 sm:w-11 sm:h-11 rounded-full object-cover flex-shrink-0 header-logo">
+                    <div class="min-w-0">
+                        <h1 class="font-elegant text-lg sm:text-2xl md:text-3xl font-bold text-gold-gradient tracking-wide truncate">TAJ HOTEL</h1>
+                        <p class="text-[10px] sm:text-xs text-gold-500/80 tracking-widest hidden sm:block">FINE DINING</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 sm:gap-4 flex-shrink-0">
+                    <button onclick="toggleSearch()" class="p-1.5 sm:p-2 rounded-full hover:bg-dark-300/50 transition-colors" aria-label="Search dishes">
+                        <svg class="w-5 h-5 text-gold-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </button>
+                    <button onclick="openCart()" class="relative p-1.5 sm:p-2 rounded-full hover:bg-dark-300/50 transition-colors" aria-label="View cart">
+                        <svg class="w-5 h-5 text-gold-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        </svg>
+                        <span id="cart-badge" class="absolute -top-1 -right-1 bg-gold-500 text-dark-500 text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold hidden">0</span>
+                    </button>
+                </div>
+            </div>
+            <div id="search-bar" class="hidden px-3 sm:px-4 pb-3 max-w-3xl mx-auto">
+                <input type="text" id="search-input" placeholder="Search dishes..." class="w-full taj-input rounded-lg px-4 py-2.5 text-sm" oninput="searchDishes(this.value)">
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-bg pt-24 sm:pt-32 pb-12 sm:pb-16 px-4">
+        <div class="max-w-4xl mx-auto text-center animate-fade-in">
+            <p class="text-gold-500 tracking-[0.2em] text-xs sm:text-sm mb-3 uppercase">Welcome to</p>
+            <h2 class="font-elegant text-4xl sm:text-5xl md:text-7xl font-bold text-gold-gradient mb-3 sm:mb-4">Taj Hotel</h2>
+            <p class="text-gray-400 text-base sm:text-lg md:text-xl max-w-2xl mx-auto px-2">Experience culinary excellence with our exquisite selection of dishes prepared by master chefs</p>
+            <div class="mt-6 sm:mt-8 flex flex-col sm:flex-row justify-center gap-3 sm:gap-6 px-4">
+                <a href="#menu" class="bg-gradient-to-r from-gold-500 to-gold-600 text-dark-500 px-6 sm:px-8 py-3 rounded-full font-semibold hover:shadow-lg hover:shadow-gold-500/25 transition-all text-center text-sm sm:text-base">View Menu</a>
+                <button onclick="openEventBooking()" class="border border-gold-500 text-gold-500 px-6 sm:px-8 py-3 rounded-full font-semibold hover:bg-gold-500/10 transition-all text-sm sm:text-base">Book Event</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Category Navigation -->
+    <nav id="categories" class="sticky top-[60px] sm:top-[72px] z-40 bg-dark-500/95 backdrop-blur-md border-b border-gold-500/10 py-2.5 sm:py-3">
+        <div class="max-w-7xl mx-auto px-3 sm:px-4">
+            <div id="category-buttons" class="flex gap-2 overflow-x-auto scrollbar-hide"></div>
+        </div>
+    </nav>
+
+    <!-- Menu Section -->
+    <main id="menu" class="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8">
+        <section id="menu-container"></section>
+    </main>
+
+    <!-- Bottom Cart Bar -->
+    <div id="bottom-cart" class="fixed bottom-0 left-0 right-0 z-40 bottom-cart transform translate-y-full transition-transform duration-300">
+        <div class="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4">
+                <div class="flex items-center justify-between w-full sm:w-auto gap-3">
+                    <div class="flex items-center gap-2 sm:gap-3">
+                        <div class="bg-gold-500 text-dark-500 px-2.5 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap" id="cart-count">0 items</div>
+                        <span class="text-gray-400 hidden sm:inline">|</span>
+                        <span class="text-base sm:text-lg font-semibold whitespace-nowrap">&#8377;<span id="cart-total">0.00</span></span>
+                    </div>
+                </div>
+                <div class="flex gap-2 sm:gap-3 w-full sm:w-auto">
+                    <button onclick="openCart()" class="flex-1 sm:flex-none px-4 sm:px-6 py-2 border border-gold-500 text-gold-500 rounded-full font-medium hover:bg-gold-500/10 transition-all text-sm">View Cart</button>
+                    <button onclick="openCheckout()" class="flex-1 sm:flex-none px-4 sm:px-6 py-2 bg-gradient-to-r from-gold-500 to-gold-600 text-dark-500 rounded-full font-semibold hover:shadow-lg hover:shadow-gold-500/25 transition-all text-sm text-center">Place Order</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cart Modal -->
+    <div id="cart-modal" class="fixed inset-0 z-50 hidden">
+        <div class="modal-overlay absolute inset-0" onclick="closeCart()"></div>
+        <div class="relative ml-auto h-full w-full max-w-md bg-dark-400 animate-slide-up overflow-hidden flex flex-col">
+            <div class="flex items-center justify-between p-4 sm:p-6 border-b border-gold-500/20">
+                <h3 class="text-xl sm:text-2xl font-elegant font-bold text-gold-gradient">Your Cart</h3>
+                <button onclick="closeCart()" class="p-2 hover:bg-dark-300 rounded-full transition-colors">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div id="cart-items" class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3"></div>
+            <div id="cart-footer" class="border-t border-gold-500/20 p-4 sm:p-6 bg-dark-500">
+                <div class="space-y-2 mb-4">
+                    <div class="flex justify-between text-gray-400"><span>Subtotal</span><span>&#8377;<span id="cart-subtotal">0.00</span></span></div>
+                    <div class="flex justify-between text-base sm:text-lg font-bold text-gold-500"><span>Total</span><span>&#8377;<span id="cart-grand-total">0.00</span></span></div>
+                </div>
+                <button onclick="closeCart(); openCheckout();" id="cart-checkout-btn" class="w-full py-3 bg-gradient-to-r from-gold-500 to-gold-600 text-dark-500 rounded-full font-semibold hover:shadow-lg hover:shadow-gold-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base" disabled>Proceed to Checkout</button>
+                <button onclick="clearCart()" id="clear-cart-btn" class="w-full mt-3 py-2 border border-gray-600 text-gray-400 rounded-full text-sm hover:border-red-500 hover:text-red-500 transition-all">Clear Cart</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Checkout Modal -->
+    <div id="checkout-modal" class="fixed inset-0 z-50 hidden">
+        <div class="modal-overlay absolute inset-0" onclick="closeCheckout()"></div>
+        <div class="relative h-full w-full max-w-2xl mx-auto my-4 sm:my-8 bg-dark-400 rounded-2xl overflow-hidden animate-slide-up flex flex-col" style="max-height: calc(100vh - 2rem);">
+            <div class="flex items-center justify-between p-4 sm:p-6 border-b border-gold-500/20">
+                <h3 class="text-xl sm:text-2xl font-elegant font-bold text-gold-gradient">Place Your Order</h3>
+                <button onclick="closeCheckout()" class="p-2 hover:bg-dark-300 rounded-full transition-colors">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4 sm:p-6">
+                <div class="mb-4 sm:mb-6 bg-dark-500 rounded-xl p-3 sm:p-4">
+                    <h4 class="text-gold-500 font-semibold mb-2 sm:mb-3 text-sm sm:text-base">Order Summary</h4>
+                    <div id="checkout-summary" class="space-y-2 text-sm"></div>
+                    <div class="border-t border-gold-500/20 mt-3 pt-3 flex justify-between font-bold text-base sm:text-lg text-gold-500">
+                        <span>Total Amount</span><span>&#8377;<span id="checkout-total">0.00</span></span>
+                    </div>
+                </div>
+                <form id="order-form" class="space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-2">Customer Name *</label>
+                            <input type="text" name="customerName" required class="w-full taj-input rounded-lg px-4 py-3" placeholder="Enter your name">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-2">Table Number *</label>
+                            <input type="text" name="tableNumber" required class="w-full taj-input rounded-lg px-4 py-3" placeholder="e.g., Table 12">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">Notes / Special Requests</label>
+                        <textarea name="notes" rows="3" class="w-full taj-input rounded-lg px-4 py-3 resize-none" placeholder="Extra spice, no onions, additional cheese, etc."></textarea>
+                    </div>
+                    <p class="text-xs text-gray-500">* Payment will be collected at the counter after your meal</p>
+                    <button type="submit" id="submit-order-btn" class="w-full py-3 sm:py-4 bg-gradient-to-r from-gold-500 to-gold-600 text-dark-500 rounded-full font-semibold text-base sm:text-lg hover:shadow-lg hover:shadow-gold-500/25 transition-all flex items-center justify-center gap-2">
+                        <span id="submit-text">Confirm Order</span>
+                        <div id="submit-spinner" class="spinner hidden"></div>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Success Modal - Now Scrollable -->
+    <div id="success-modal" class="fixed inset-0 z-50 hidden">
+        <div class="modal-overlay absolute inset-0"></div>
+        <div class="relative h-full w-full max-w-md mx-auto my-2 sm:my-6 bg-dark-400 rounded-2xl overflow-hidden animate-slide-up flex flex-col" style="max-height: calc(100vh - 1rem);">
+            <!-- Scrollable Content Area -->
+            <div class="flex-1 overflow-y-auto p-4 sm:p-6 text-center receipt-scroll">
+                <div class="w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
+                    <svg class="w-7 h-7 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                </div>
+                <h3 class="text-xl sm:text-2xl font-elegant font-bold text-gold-gradient mb-2">Order Placed!</h3>
+                <p class="text-gray-400 mb-3 sm:mb-4 text-sm">Your order has been successfully placed. Our staff will attend to you shortly.</p>
+                
+                <!-- Receipt Section - Scrollable -->
+                <div id="receipt-section" class="bg-dark-500 rounded-xl p-3 sm:p-4 mb-4 text-left border-2 border-gold-500/40">
+                    <div class="text-center mb-3 pb-3 border-b-2 border-gold-500/30 bg-gradient-to-r from-yellow-900/30 via-yellow-800/40 to-yellow-900/30 rounded-lg p-3 -mx-2 -mt-2">
+                        <h4 class="font-elegant text-lg sm:text-xl font-bold text-gold-gradient tracking-wider" style="text-shadow: 0 0 10px rgba(197, 150, 11, 0.3);">TAJ HOTEL</h4>
+                        <p class="text-[10px] text-gray-400 mt-1">Apollo Bunder, Mumbai | Tel: +91 22 6665 3333</p>
+                    </div>
+                    <div class="space-y-1.5 text-xs mb-3 pb-2 border-b border-gold-500/10">
+                        <div class="flex justify-between"><span class="text-gray-400">Order ID</span><span class="text-gold-500 font-mono" id="receipt-order-id">-</span></div>
+                        <div class="flex justify-between"><span class="text-gray-400">Date & Time</span><span class="text-white" id="receipt-date">-</span></div>
+                        <div class="flex justify-between"><span class="text-gray-400">Customer</span><span class="text-white" id="receipt-customer">-</span></div>
+                        <div class="flex justify-between"><span class="text-gray-400">Table</span><span class="text-white" id="receipt-table">-</span></div>
+                    </div>
+                    <div class="mb-3 pb-2 border-b border-gold-500/10 max-h-40 sm:max-h-48 overflow-y-auto" id="receipt-items-container">
+                        <p class="text-[10px] text-gray-500 mb-1.5">ITEMS ORDERED</p>
+                        <div id="receipt-items" class="space-y-1 text-xs"></div>
+                    </div>
+                    <div class="flex justify-between font-bold">
+                        <span class="text-gold-500">TOTAL</span>
+                        <span class="text-gold-500" id="receipt-total">&#8377;0.00</span>
+                    </div>
+                    <div class="mt-3 pt-2 border-t border-gold-500/10 text-center">
+                        <p class="text-[10px] text-gray-500">Thank you for dining with us!</p>
+                        <p class="text-[10px] text-gray-600">Payment at counter</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Fixed Bottom Buttons -->
+            <div class="flex-shrink-0 p-3 sm:p-4 border-t border-gold-500/20 bg-dark-500">
+                <div class="flex gap-2">
+                    <button onclick="downloadReceipt()" id="download-receipt-btn" class="flex-1 py-2.5 sm:py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-full font-semibold text-xs sm:text-sm hover:shadow-lg transition-all flex items-center justify-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        Download Receipt
+                    </button>
+                    <button onclick="closeSuccess()" class="flex-1 py-2.5 sm:py-3 bg-gradient-to-r from-gold-500 to-gold-600 text-dark-500 rounded-full font-semibold text-xs sm:text-sm hover:shadow-lg transition-all">Back to Menu</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Event Booking Modal -->
+    <div id="event-modal" class="fixed inset-0 z-50 hidden">
+        <div class="modal-overlay absolute inset-0" onclick="closeEventBooking()"></div>
+        <div class="relative h-full w-full max-w-3xl mx-auto my-4 sm:my-8 bg-dark-400 rounded-2xl overflow-hidden animate-slide-up flex flex-col" style="max-height: calc(100vh - 2rem);">
+            <div class="flex items-center justify-between p-4 sm:p-6 border-b border-gold-500/20">
+                <h3 class="text-xl sm:text-2xl font-elegant font-bold text-gold-gradient">Event Booking</h3>
+                <button onclick="closeEventBooking()" class="p-2 hover:bg-dark-300 rounded-full transition-colors">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4 sm:p-6">
+                <form id="event-form" class="space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-2">Event Type *</label>
+                            <select name="eventType" required class="w-full taj-input rounded-lg px-4 py-3">
+                                <option value="">Select Event Type</option>
+                                <option value="Wedding">Wedding</option>
+                                <option value="Reception">Reception</option>
+                                <option value="Engagement">Engagement</option>
+                                <option value="Birthday Party">Birthday Party</option>
+                                <option value="Corporate Event">Corporate Event</option>
+                                <option value="Conference">Conference</option>
+                                <option value="Anniversary">Anniversary</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-2">Event Date * (MM/DD/YYYY)</label>
+                            <input type="text" name="eventDate" required maxlength="10" pattern="(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])\/\d{4}" class="w-full taj-input rounded-lg px-4 py-3" placeholder="MM/DD/YYYY" oninput="formatDate(this)">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-2">Room Package *</label>
+                            <select name="roomPackage" required class="w-full taj-input rounded-lg px-4 py-3">
+                                <option value="">Select Package</option>
+                                <option value="Standard">Standard</option>
+                                <option value="Deluxe">Deluxe</option>
+                                <option value="Executive Suite">Executive Suite</option>
+                                <option value="Presidential Suite">Presidential Suite</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-2">Number of Rooms *</label>
+                            <input type="number" name="numRooms" required min="1" class="w-full taj-input rounded-lg px-4 py-3" placeholder="Number of rooms">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">Budget Range *</label>
+                        <select name="budgetRange" required class="w-full taj-input rounded-lg px-4 py-3">
+                            <option value="">Select Budget Range</option>
+                            <option value="&#8377;50K - &#8377;1 Lakh">&#8377;50K - &#8377;1 Lakh</option>
+                            <option value="&#8377;1 Lakh - &#8377;3 Lakh">&#8377;1 Lakh - &#8377;3 Lakh</option>
+                            <option value="&#8377;3 Lakh - &#8377;5 Lakh">&#8377;3 Lakh - &#8377;5 Lakh</option>
+                            <option value="&#8377;5 Lakh - &#8377;10 Lakh">&#8377;5 Lakh - &#8377;10 Lakh</option>
+                            <option value="Above &#8377;10 Lakh">Above &#8377;10 Lakh</option>
+                        </select>
+                    </div>
+                    <div class="border-t border-gold-500/20 pt-4">
+                        <h4 class="text-gold-500 font-semibold mb-4">Contact Information</h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div><label class="block text-sm text-gray-400 mb-2">Lead Name *</label><input type="text" name="leadName" required class="w-full taj-input rounded-lg px-4 py-3" placeholder="Full name"></div>
+                            <div><label class="block text-sm text-gray-400 mb-2">Email *</label><input type="email" name="email" required class="w-full taj-input rounded-lg px-4 py-3" placeholder="your@email.com"></div>
+                        </div>
+                        <div class="mt-4"><label class="block text-sm text-gray-400 mb-2">Phone Number * (10 digits)</label><input type="tel" name="phone" required maxlength="10" pattern="[0-9]{10}" class="w-full taj-input rounded-lg px-4 py-3" placeholder="Enter 10 digit number" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)"></div>
+                    </div>
+                    <div><label class="block text-sm text-gray-400 mb-2">Catering Preferences</label><textarea name="cateringPreferences" rows="2" class="w-full taj-input rounded-lg px-4 py-3 resize-none" placeholder="Describe your catering requirements..."></textarea></div>
+                    <div><label class="block text-sm text-gray-400 mb-2">Special Requests</label><textarea name="specialRequests" rows="2" class="w-full taj-input rounded-lg px-4 py-3 resize-none" placeholder="Any special arrangements or requests..."></textarea></div>
+                    <div class="border-t border-gold-500/20 pt-4">
+                        <h4 class="text-gold-500 font-semibold mb-4">Parking Options</h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <label class="checkbox-wrapper cursor-pointer"><input type="checkbox" name="valetParking"><span class="text-gray-300">Valet Parking</span></label>
+                            <label class="checkbox-wrapper cursor-pointer"><input type="checkbox" name="reservedParking"><span class="text-gray-300">Reserved Parking</span></label>
+                        </div>
+                        <div class="mt-4"><label class="block text-sm text-gray-400 mb-2">Parking Count</label><input type="number" name="parkingCount" min="0" class="w-full taj-input rounded-lg px-4 py-3" placeholder="Number of parking spots"></div>
+                    </div>
+                    <button type="submit" id="submit-event-btn" class="w-full py-3 sm:py-4 bg-gradient-to-r from-gold-500 to-gold-600 text-dark-500 rounded-full font-semibold text-base sm:text-lg hover:shadow-lg hover:shadow-gold-500/25 transition-all flex items-center justify-center gap-2">
+                        <span id="submit-event-text">Submit Booking Request</span>
+                        <div id="submit-event-spinner" class="spinner hidden"></div>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Event Success Modal -->
+    <div id="event-success-modal" class="fixed inset-0 z-50 hidden">
+        <div class="modal-overlay absolute inset-0"></div>
+        <div class="relative h-full w-full max-w-md mx-auto my-16 sm:my-20 bg-dark-400 rounded-2xl overflow-hidden animate-slide-up p-6 sm:p-8 text-center">
+            <div class="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 rounded-full bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center">
+                <svg class="w-8 h-8 sm:w-10 sm:h-10 text-dark-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <h3 class="text-2xl sm:text-3xl font-elegant font-bold text-gold-gradient mb-2 sm:mb-3">Booking Request Received!</h3>
+            <p class="text-gray-400 mb-4 sm:mb-6 text-sm sm:text-base">Thank you for your event booking request. Our team will contact you shortly to confirm the details.</p>
+            <button onclick="closeEventSuccess()" class="w-full py-3 bg-gradient-to-r from-gold-500 to-gold-600 text-dark-500 rounded-full font-semibold hover:shadow-lg transition-all text-sm sm:text-base">Back to Menu</button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark-500 border-t border-gold-500/20 mt-16">
+        <div class="max-w-7xl mx-auto px-4 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-12 h-12 rounded-full bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center"><span class="text-dark-500 font-bold text-lg">T</span></div>
+                        <div><h3 class="font-elegant text-xl font-bold text-gold-gradient">TAJ HOTEL</h3></div>
+                    </div>
+                    <p class="text-gray-400 text-sm leading-relaxed">A legacy of culinary excellence, serving authentic Indian cuisine with world-class hospitality since 1903.</p>
+                </div>
+                <div>
+                    <h4 class="text-gold-500 font-semibold mb-4">Contact Us</h4>
+                    <ul class="space-y-3 text-gray-400 text-sm">
+                        <li class="flex items-start gap-2"><svg class="w-5 h-5 text-gold-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span>Apollo Bunder, Colaba, Mumbai, Maharashtra 400001</span></li>
+                        <li class="flex items-center gap-2"><svg class="w-5 h-5 text-gold-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg><span>+91 22 6665 3333</span></li>
+                        <li class="flex items-center gap-2"><svg class="w-5 h-5 text-gold-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span>Open Daily: 7:00 AM - 11:00 PM</span></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-gold-500 font-semibold mb-4">Follow Us</h4>
+                    <div class="flex gap-4">
+                        <a href="https://instagram.com/tajhotels" target="_blank" rel="noopener" class="w-10 h-10 rounded-full border border-gold-500/30 flex items-center justify-center hover:bg-gold-500/20 transition-all"><svg class="w-5 h-5 text-gold-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a>
+                        <a href="https://facebook.com/tajhotels" target="_blank" rel="noopener" class="w-10 h-10 rounded-full border border-gold-500/30 flex items-center justify-center hover:bg-gold-500/20 transition-all"><svg class="w-5 h-5 text-gold-500" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385h-3.047v-3.47h3.047v-2.642c0-3.007 1.792-4.669 4.532-4.669 1.313 0 2.686.235 2.686.235v2.953h-1.514c-1.491 0-1.956.925-1.956 1.874v2.253h3.328l-.532 3.47h-2.796v8.385c5.737-.9 10.125-5.864 10.125-11.854z"/></svg></a>
+                        <a href="https://youtube.com/tajhotels" target="_blank" rel="noopener" class="w-10 h-10 rounded-full border border-gold-500/30 flex items-center justify-center hover:bg-gold-500/20 transition-all"><svg class="w-5 h-5 text-gold-500" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a>
+                    </div>
+                    <p class="text-gray-500 text-xs mt-6">&copy; 2024 Taj Hotel. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <div id="toast-container"></div>
+
+    <script>
+    // ===== MENU DATA (Fallback when API is not available) =====
+    let menuItems = [];
+    let menuLoaded = false;
+
+    const categories = [
+        { id: 'all', name: 'All Dishes', icon: '&#127860;' },
+        { id: 'starters', name: 'Starters', icon: '&#129367;' },
+        { id: 'main-veg', name: 'Main Veg', icon: '&#127859;' },
+        { id: 'main-nonveg', name: 'Main Non-Veg', icon: '&#127831;' },
+        { id: 'breads', name: 'Indian Breads', icon: '&#129367;' },
+        { id: 'desserts', name: 'Desserts', icon: '&#127842;' },
+        { id: 'beverages', name: 'Beverages', icon: '&#129346;' }
+    ];
+
+    // Fallback menu data - 8+ items
+    const fallbackMenu = [
+        { id: 1, name: "Paneer Tikka", description: "Marinated cottage cheese grilled in tandoor with peppers and onions", price: 550, halfPrice: 300, category: "starters", isVeg: true, isPopular: true, inStock: true, image: "https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?w=400" },
+        { id: 2, name: "Chicken Tikka", description: "Tender chicken pieces marinated in spices and yoghurt, grilled in tandoor", price: 620, category: "starters", isVeg: false, isPopular: true, inStock: true, image: "https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=400" },
+        { id: 3, name: "Butter Chicken", description: "Tandoori chicken in rich tomato and butter gravy with aromatic spices", price: 650, category: "main-nonveg", isVeg: false, isPopular: true, inStock: true, image: "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=400" },
+        { id: 4, name: "Dal Makhani", description: "Black lentils slow-cooked overnight with butter and cream", price: 480, category: "main-veg", isVeg: true, isPopular: true, inStock: true, image: "https://images.unsplash.com/photo-1546833998-877b37c2e5c6?w=400" },
+        { id: 5, name: "Garlic Naan", description: "Fresh naan topped with garlic, butter and coriander", price: 140, category: "breads", isVeg: true, isPopular: true, inStock: true, image: "https://images.unsplash.com/photo-1626074353765-517a681e40be?w=400" },
+        { id: 6, name: "Gulab Jamun", description: "Soft milk dumplings in rose-flavoured sugar syrup", price: 280, category: "desserts", isVeg: true, isPopular: true, inStock: true, image: "https://images.unsplash.com/photo-1551632436-cbf8dd35adfa?w=400" },
+        { id: 7, name: "Mango Lassi", description: "Refreshing mango and yoghurt smoothie", price: 220, category: "beverages", isVeg: true, isPopular: true, inStock: true, image: "https://images.unsplash.com/photo-1623812838056-a350722d5445?w=400" },
+        { id: 8, name: "Mutton Rogan Josh", description: "Slow-cooked lamb in aromatic Kashmiri red chilli gravy", price: 780, category: "main-nonveg", isVeg: false, isChefSpecial: true, inStock: true, image: "https://images.unsplash.com/photo-1574653853027-5382a3d22065?w=400" },
+        { id: 9, name: "Malai Kofta", description: "Crispy paneer and potato dumplings in creamy cashew gravy", price: 520, category: "main-veg", isVeg: true, inStock: true, image: "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=400" },
+        { id: 10, name: "Tandoori Prawns", description: "Jumbo prawns marinated in tandoori masala, grilled to perfection", price: 950, category: "starters", isVeg: false, isChefSpecial: true, inStock: true, image: "https://images.unsplash.com/photo-1565557623262-b51c2513c641?w=400" }
+    ];
+
+    // Use local fallback menu (simpler, more reliable approach)
+    function loadMenu() {
+        menuItems = fallbackMenu;
+        menuLoaded = true;
+        console.log('Menu loaded:', menuItems.length, 'items');
+        renderMenu(document.querySelector('.category-btn.active')?.dataset?.category || 'all');
+    }
+
+    let cart = JSON.parse(localStorage.getItem('tajCart')) || {};
+    let lastOrderDetails = {};
+
+    function saveCart() { localStorage.setItem('tajCart', JSON.stringify(cart)); }
+    function getCartKey(id, variant) { return `${id}_${variant || 'full'}`; }
+    function getCartItem(id, variant) { return cart[getCartKey(id, variant)] || { qty: 0 }; }
+
+    function addToCart(id, variant = null) {
+        const key = getCartKey(id, variant);
+        if (!cart[key]) { cart[key] = { id, variant, qty: 1 }; } else { cart[key].qty++; }
+        saveCart(); updateCartUI();
+        const item = menuItems.find(i => i.id === id);
+        if (item) showToast(`${item.name} added to cart`);
+    }
+
+    function updateQuantity(key, delta) {
+        if (!cart[key]) return;
+        cart[key].qty += delta;
+        if (cart[key].qty <= 0) { delete cart[key]; }
+        saveCart(); updateCartUI();
+    }
+
+    function clearCart() {
+        if (Object.keys(cart).length === 0) return;
+        cart = {}; saveCart(); updateCartUI(); closeCart();
+        showToast('Cart cleared');
+    }
+
+    function getTotalItems() { return Object.values(cart).reduce((sum, item) => sum + item.qty, 0); }
+    function getTotalAmount() {
+        return Object.entries(cart).reduce((sum, [key, item]) => {
+            const menuItem = menuItems.find(i => i.id === item.id);
+            if (!menuItem) return sum;
+            const price = item.variant === 'half' ? (menuItem.halfPrice || menuItem.price) : menuItem.price;
+            return sum + (price * item.qty);
+        }, 0);
+    }
+
+    function updateCartUI() {
+        const totalItems = getTotalItems();
+        const totalAmount = getTotalAmount();
+        const badge = document.getElementById('cart-badge');
+        if (totalItems > 0) { badge.textContent = totalItems; badge.classList.remove('hidden'); } else { badge.classList.add('hidden'); }
+        const countEl = document.getElementById('cart-count');
+        const totalEl = document.getElementById('cart-total');
+        if (countEl) countEl.textContent = `${totalItems} item${totalItems !== 1 ? 's' : ''}`;
+        if (totalEl) totalEl.textContent = totalAmount.toFixed(2);
+        const bottomCart = document.getElementById('bottom-cart');
+        if (totalItems > 0) { bottomCart.classList.remove('translate-y-full'); } else { bottomCart.classList.add('translate-y-full'); }
+        renderCartItems();
+    }
+
+    function renderCartItems() {
+        const container = document.getElementById('cart-items');
+        const cartKeys = Object.keys(cart);
+        if (cartKeys.length === 0) {
+            container.innerHTML = '<div class="text-center py-12"><svg class="w-16 h-16 mx-auto text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg><p class="text-gray-400">Your cart is empty</p><p class="text-gray-600 text-sm mt-2">Add items from the menu to get started</p></div>';
+            document.getElementById('cart-subtotal').textContent = '0.00';
+            document.getElementById('cart-grand-total').textContent = '0.00';
+            document.getElementById('cart-checkout-btn').disabled = true;
+            return;
+        }
+        let html = ''; let subtotal = 0;
+        cartKeys.forEach(key => {
+            const item = cart[key];
+            const menuItem = menuItems.find(i => i.id === item.id);
+            if (!menuItem) return;
+            const price = item.variant === 'half' ? (menuItem.halfPrice || menuItem.price) : menuItem.price;
+            const itemTotal = price * item.qty;
+            subtotal += itemTotal;
+            html += `<div class="flex gap-3 bg-dark-500 rounded-xl p-3 animate-fade-in"><img src="${menuItem.image}" alt="${menuItem.name}" class="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover flex-shrink-0" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200'"><div class="flex-1 min-w-0"><div class="flex items-center gap-2">${menuItem.isVeg ? '<div class="veg-badge flex-shrink-0"><span class="badge-text">Veg</span></div>' : '<div class="nonveg-badge flex-shrink-0"><span class="badge-text">Non-Veg</span></div>'}<h4 class="font-semibold text-sm truncate">${menuItem.name}</h4></div><p class="text-xs text-gray-500 mt-1">${item.variant === 'half' ? 'Half' : 'Full'} portion</p><div class="flex items-center justify-between mt-2"><div class="flex items-center gap-2"><button onclick="updateQuantity('${key}', -1)" class="qty-btn w-7 h-7 rounded-full border border-gray-600 flex items-center justify-center hover:border-gold-500 text-gray-400 hover:text-gold-500 text-sm">&#8722;</button><span class="w-6 text-center text-sm font-medium">${item.qty}</span><button onclick="updateQuantity('${key}', 1)" class="qty-btn w-7 h-7 rounded-full border border-gray-600 flex items-center justify-center hover:border-gold-500 text-gray-400 hover:text-gold-500 text-sm">+</button></div><span class="font-semibold text-gold-500 text-sm">&#8377;${itemTotal.toFixed(2)}</span></div></div></div>`;
+        });
+        container.innerHTML = html;
+        document.getElementById('cart-subtotal').textContent = subtotal.toFixed(2);
+        document.getElementById('cart-grand-total').textContent = subtotal.toFixed(2);
+        document.getElementById('cart-checkout-btn').disabled = false;
+    }
+
+    function renderCategories() {
+        const container = document.getElementById('category-buttons');
+        container.innerHTML = categories.map(cat => `<button onclick="filterCategory('${cat.id}')" data-category="${cat.id}" class="category-btn flex-shrink-0 px-4 sm:px-5 py-2 rounded-full border border-gold-500/30 text-xs sm:text-sm font-medium text-gray-400 hover:border-gold-500 hover:text-gold-500 transition-all flex items-center gap-1.5 sm:gap-2 whitespace-nowrap ${cat.id === 'all' ? 'active' : ''}"><span class="text-sm sm:text-base">${cat.icon}</span><span>${cat.name}</span></button>`).join('');
+    }
+
+    function filterCategory(categoryId) {
+        document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
+        const target = document.querySelector(`[data-category="${categoryId}"]`);
+        if (target) target.classList.add('active');
+        renderMenu(categoryId);
+    }
+
+    function renderMenu(categoryId = 'all', searchTerm = '') {
+        const container = document.getElementById('menu-container');
+        let filteredItems = categoryId === 'all' ? menuItems : menuItems.filter(item => item.category === categoryId);
+        if (searchTerm) {
+            const term = searchTerm.toLowerCase();
+            filteredItems = filteredItems.filter(item => item.name.toLowerCase().includes(term) || item.description.toLowerCase().includes(term));
+        }
+        if (filteredItems.length === 0) {
+            container.innerHTML = '<div class="text-center py-16"><svg class="w-20 h-20 mx-auto text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg><p class="text-gray-400 text-lg">No dishes found</p><p class="text-gray-600 text-sm mt-2">Try a different category or search term</p></div>';
+            return;
+        }
+        if (categoryId === 'all' && !searchTerm) {
+            let html = '';
+            categories.forEach(cat => {
+                if (cat.id === 'all') return;
+                const catItems = filteredItems.filter(item => item.category === cat.id);
+                if (catItems.length === 0) return;
+                html += `<section id="section-${cat.id}" class="mb-8 sm:mb-12"><div class="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6"><span class="text-2xl sm:text-3xl">${cat.icon}</span><div class="min-w-0"><h3 class="text-xl sm:text-2xl font-elegant font-bold text-gold-gradient">${cat.name}</h3><div class="w-12 sm:w-16 h-0.5 bg-gradient-to-r from-gold-500 to-transparent mt-1"></div></div></div><div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 dish-grid">${catItems.map((item, index) => renderDishCard(item, index)).join('')}</div></section>`;
+            });
+            container.innerHTML = html;
+        } else {
+            container.innerHTML = `<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 dish-grid">${filteredItems.map((item, index) => renderDishCard(item, index)).join('')}</div>`;
+        }
+    }
+
+    function renderDishCard(item, index) {
+        const hasVariants = item.halfPrice && item.halfPrice > 0;
+        const fullKey = getCartKey(item.id, 'full');
+        const halfKey = getCartKey(item.id, 'half');
+        const fullQty = cart[fullKey]?.qty || 0;
+        const halfQty = cart[halfKey]?.qty || 0;
+        const totalQty = fullQty + halfQty;
+
+        let controlsHtml = '';
+        if (hasVariants) {
+            controlsHtml = `<div class="flex-1 min-w-0"><div class="text-[11px] sm:text-xs text-gray-500 mb-1">Half: &#8377;${item.halfPrice} | Full: &#8377;${item.price}</div><div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2"><button onclick="addToCart(${item.id}, 'half')" class="qty-btn py-1.5 text-xs font-medium border ${halfQty > 0 ? 'bg-gold-500 text-dark-500 border-gold-500' : 'border-gray-600 text-gray-400 hover:border-gold-500 hover:text-gold-500'} rounded-lg transition-all text-center px-2">${halfQty > 0 ? 'Half (' + halfQty + ')' : 'Half'}</button><button onclick="addToCart(${item.id}, 'full')" class="qty-btn py-1.5 text-xs font-medium border ${fullQty > 0 ? 'bg-gold-500 text-dark-500 border-gold-500' : 'border-gray-600 text-gray-400 hover:border-gold-500 hover:text-gold-500'} rounded-lg transition-all text-center px-2">${fullQty > 0 ? 'Full (' + fullQty + ')' : 'Full'}</button></div>${totalQty > 0 ? '<div class="flex items-center gap-2 mt-1.5 justify-center"><button onclick="updateQuantity(\'' + (halfQty > 0 ? halfKey : fullKey) + '\', -1)" class="qty-btn w-6 h-6 rounded-full border border-gray-600 flex items-center justify-center text-gray-400 hover:border-gold-500 hover:text-gold-500 text-sm">&#8722;</button><span class="text-sm font-medium text-gray-300">' + totalQty + '</span><button onclick="updateQuantity(\'' + (halfQty > 0 ? halfKey : fullKey) + '\', 1)" class="qty-btn w-6 h-6 rounded-full border border-gray-600 flex items-center justify-center text-gray-400 hover:border-gold-500 hover:text-gold-500 text-sm">+</button></div>' : ''}</div>`;
+        } else {
+            controlsHtml = `<div class="flex-1 min-w-0"><div class="text-gold-500 font-bold text-base sm:text-lg mb-2">&#8377;${item.price}</div>${fullQty > 0 ? '<div class="flex items-center gap-2 justify-center"><button onclick="updateQuantity(\'' + fullKey + '\', -1)" class="qty-btn w-8 h-8 rounded-full border border-gray-600 flex items-center justify-center text-gray-400 hover:border-gold-500 hover:text-gold-500">&#8722;</button><span class="w-8 text-center font-semibold">' + fullQty + '</span><button onclick="updateQuantity(\'' + fullKey + '\', 1)" class="qty-btn w-8 h-8 rounded-full border border-gray-600 flex items-center justify-center text-gray-400 hover:border-gold-500 hover:text-gold-500">+</button></div>' : '<button onclick="addToCart(' + item.id + ')" class="w-full py-2 border border-gold-500/50 text-gold-500 rounded-lg text-sm font-medium hover:bg-gold-500 hover:text-dark-500 transition-all">Add to Cart</button>'}</div>`;
+        }
+
+        return `<div class="dish-card rounded-xl sm:rounded-2xl overflow-hidden border border-gold-500/10 animate-fade-up" style="animation-delay: ${index * 0.05}s"><div class="relative"><img src="${item.image}" alt="${item.name}" class="dish-image" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop'"><div class="absolute top-2 sm:top-3 left-2 sm:left-3 flex flex-col gap-1.5">${item.isVeg ? '<div class="veg-badge"><span class="badge-text">Veg</span></div>' : '<div class="nonveg-badge"><span class="badge-text">Non-Veg</span></div>'}</div>${item.isPopular ? '<div class="absolute top-2 right-2 sm:top-3 sm:right-3 bg-gold-500 text-dark-500 text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full font-semibold">Popular</div>' : ''}${item.isChefSpecial ? '<div class="absolute top-2 right-2 sm:top-3 sm:right-3 bg-gradient-to-r from-gold-400 to-gold-600 text-dark-500 text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full font-semibold">Chef\'s Special</div>' : ''}</div><div class="p-3 sm:p-4"><h3 class="text-sm sm:text-base sm:text-lg font-semibold text-white mb-1 leading-tight">${item.name}</h3><p class="text-gray-400 text-xs sm:text-sm leading-relaxed mb-2 sm:mb-3 line-clamp-2">${item.description}</p><div class="flex items-center justify-between">${controlsHtml}</div></div></div>`;
+    }
+
+    function toggleSearch() {
+        const searchBar = document.getElementById('search-bar');
+        searchBar.classList.toggle('hidden');
+        if (!searchBar.classList.contains('hidden')) { document.getElementById('search-input').focus(); } else { document.getElementById('search-input').value = ''; searchDishes(''); }
+    }
+    function searchDishes(term) {
+        const activeCategory = document.querySelector('.category-btn.active')?.dataset?.category || 'all';
+        renderMenu(activeCategory, term);
+    }
+
+    // ===== CART MODAL =====
+    function openCart() { document.getElementById('cart-modal').classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
+    function closeCart() { document.getElementById('cart-modal').classList.add('hidden'); document.body.style.overflow = ''; }
+
+    // ===== CHECKOUT =====
+    function openCheckout() {
+        if (getTotalItems() === 0) { showToast('Please add items to cart first'); return; }
+        const summary = document.getElementById('checkout-summary');
+        let html = ''; let total = 0;
+        Object.entries(cart).forEach(([key, item]) => {
+            const menuItem = menuItems.find(i => i.id === item.id);
+            if (!menuItem) return;
+            const price = item.variant === 'half' ? (menuItem.halfPrice || menuItem.price) : menuItem.price;
+            const itemTotal = price * item.qty;
+            total += itemTotal;
+            html += `<div class="flex justify-between text-gray-300 text-xs sm:text-sm"><span class="break-words">${menuItem.name} ${item.variant === 'half' ? '(Half)' : '(Full)'} x ${item.qty}</span><span class="flex-shrink-0 ml-2">&#8377;${itemTotal.toFixed(2)}</span></div>`;
+        });
+        summary.innerHTML = html;
+        document.getElementById('checkout-total').textContent = total.toFixed(2);
+        document.getElementById('checkout-modal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeCheckout() { document.getElementById('checkout-modal').classList.add('hidden'); document.body.style.overflow = ''; }
+
+    // ===== ORDER SUBMISSION =====
+    document.getElementById('order-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('submit-order-btn');
+        const spinner = document.getElementById('submit-spinner');
+        const btnText = document.getElementById('submit-text');
+        btn.disabled = true; spinner.classList.remove('hidden'); btnText.textContent = 'Submitting...';
+
+        const formData = new FormData(this);
+        const customerName = formData.get('customerName');
+        const tableNumber = formData.get('tableNumber');
+        const notes = formData.get('notes');
+
+        let orderedItemsText = '';
+        let totalAmount = 0;
+        let cartOrderItems = [];
+
+        Object.entries(cart).forEach(([key, item]) => {
+            const menuItem = menuItems.find(i => i.id === item.id);
+            if (!menuItem) return;
+            const price = item.variant === 'half' ? (menuItem.halfPrice || menuItem.price) : menuItem.price;
+            const itemTotal = price * item.qty;
+            totalAmount += itemTotal;
+            orderedItemsText += `${menuItem.name} ${item.variant === 'half' ? '(Half)' : ''} x ${item.qty} = Rs.${itemTotal.toFixed(2)}\n`;
+            cartOrderItems.push({ name: menuItem.name, variant: item.variant, qty: item.qty, total: itemTotal });
+        });
+
+        const customOrderId = 'ORD-' + Date.now().toString(36).toUpperCase();
+        const payload = {
+            type: 'order',
+            data: {
+                customerName, tableNumber,
+                orderedItems: orderedItemsText.trim(),
+                totalAmount, notes: notes || 'None',
+                orderId: customOrderId,
+                items: cartOrderItems
+            }
+        };
+
+        try {
+            const response = await fetch('/api/order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const errText = await response.text();
+                console.error('Order API error:', response.status, errText);
+                showToast('Failed to place order. Please try again.', 'error');
+                return;
+            }
+
+            const result = await response.json();
+            
+            // Save details for receipt
+            lastOrderDetails = { customerName, tableNumber, customOrderId, items: cartOrderItems, totalAmount };
+
+            const orderTotalItems = getTotalItems();
+            cart = {}; saveCart(); updateCartUI(); closeCheckout(); this.reset();
+            openSuccessModal(customOrderId, orderTotalItems, totalAmount);
+            showToast('Order placed successfully!');
+        } catch (error) {
+            console.error('Order submission error:', error);
+            showToast('Network error. Please check your connection and try again.', 'error');
+        } finally {
+            btn.disabled = false; spinner.classList.add('hidden'); btnText.textContent = 'Confirm Order';
+        }
+    });
+
+    // ===== SUCCESS MODAL =====
+    function openSuccessModal(orderId, totalItems, totalAmount) {
+        const orderDate = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+        lastOrderDetails.orderDate = orderDate;
+        
+        document.getElementById('receipt-order-id').textContent = orderId;
+        document.getElementById('receipt-date').textContent = orderDate;
+        document.getElementById('receipt-customer').textContent = lastOrderDetails.customerName;
+        document.getElementById('receipt-table').textContent = lastOrderDetails.tableNumber;
+        document.getElementById('receipt-total').textContent = '&#8377;' + totalAmount.toFixed(2);
+
+        let itemsHtml = '';
+        if (lastOrderDetails.items && lastOrderDetails.items.length > 0) {
+            lastOrderDetails.items.forEach(item => {
+                itemsHtml += `<div class="flex justify-between text-xs py-1"><span class="text-gray-300 break-words mr-2">${item.name} ${item.variant === 'half' ? '(Half)' : ''} x ${item.qty}</span><span class="text-white flex-shrink-0">&#8377;${item.total.toFixed(2)}</span></div>`;
+            });
+        } else {
+            itemsHtml = '<p class="text-gray-500 text-xs">No items</p>';
+        }
+        document.getElementById('receipt-items').innerHTML = itemsHtml;
+        document.getElementById('success-modal').classList.remove('hidden');
+    }
+    function closeSuccess() { document.getElementById('success-modal').classList.add('hidden'); document.body.style.overflow = ''; lastOrderDetails = {}; }
+
+    // ===== RECEIPT DOWNLOAD =====
+    async function downloadReceipt() {
+        const receiptSection = document.getElementById('receipt-section');
+        const btn = document.getElementById('download-receipt-btn');
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<div class="spinner w-4 h-4 border-2" style="width:16px;height:16px;border-width:2px;"></div> Generating...';
+        btn.disabled = true;
+
+        try {
+            const canvas = await html2canvas(receiptSection, {
+                backgroundColor: '#1A2A3A',
+                scale: 2,
+                useCORS: true,
+                logging: false,
+                allowTaint: true,
+                width: receiptSection.offsetWidth,
+                height: receiptSection.offsetHeight
+            });
+            
+            const link = document.createElement('a');
+            link.download = `TajHotel_Receipt_${lastOrderDetails.customOrderId || 'receipt'}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            btn.innerHTML = '&#10003; Downloaded!';
+            setTimeout(() => { btn.innerHTML = originalHTML; btn.disabled = false; }, 2000);
+        } catch (err) {
+            console.error('Receipt generation error:', err);
+            btn.innerHTML = 'Error! Try again';
+            setTimeout(() => { btn.innerHTML = originalHTML; btn.disabled = false; }, 2000);
+        }
+    }
+
+    // ===== EVENT BOOKING =====
+    function openEventBooking() { document.getElementById('event-modal').classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
+    function closeEventBooking() { document.getElementById('event-modal').classList.add('hidden'); document.body.style.overflow = ''; }
+    function openEventSuccess() { document.getElementById('event-success-modal').classList.remove('hidden'); }
+    function closeEventSuccess() { document.getElementById('event-success-modal').classList.add('hidden'); document.body.style.overflow = ''; }
+
+    function formatDate(input) {
+        let value = input.value.replace(/[^0-9]/g, '');
+        if (value.length >= 2) { value = value.slice(0, 2) + '/' + value.slice(2); }
+        if (value.length >= 5) { value = value.slice(0, 5) + '/' + value.slice(5); }
+        input.value = value.slice(0, 10);
+    }
+
+    document.getElementById('event-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('submit-event-btn');
+        const spinner = document.getElementById('submit-event-spinner');
+        const btnText = document.getElementById('submit-event-text');
+        const phone = this.phone.value.replace(/[^0-9]/g, '');
+        if (phone.length !== 10) { showToast('Phone number must be exactly 10 digits', 'error'); return; }
+        const dateValue = this.eventDate.value;
+        const dateRegex = /^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])\/\d{4}$/;
+        if (!dateRegex.test(dateValue)) { showToast('Date must be in MM/DD/YYYY format (e.g., 12/25/2025)', 'error'); return; }
+        btn.disabled = true; spinner.classList.remove('hidden'); btnText.textContent = 'Submitting...';
+        const formData = new FormData(this);
+        try {
+            const response = await fetch('/api/order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    type: 'event',
+                    data: {
+                        eventType: formData.get('eventType'),
+                        eventDate: formData.get('eventDate'),
+                        roomPackage: formData.get('roomPackage'),
+                        numRooms: formData.get('numRooms'),
+                        budgetRange: formData.get('budgetRange'),
+                        leadName: formData.get('leadName'),
+                        email: formData.get('email'),
+                        phone: formData.get('phone'),
+                        cateringPreferences: formData.get('cateringPreferences') || 'No specific preferences',
+                        specialRequests: formData.get('specialRequests') || 'None',
+                        valetParking: formData.get('valetParking') === 'on',
+                        reservedParking: formData.get('reservedParking') === 'on',
+                        parkingCount: formData.get('parkingCount') || 0
+                    }
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                console.error('Event API error:', errorData);
+                showToast('Failed to submit booking. Please try again.', 'error');
+                return;
+            }
+
+            closeEventBooking(); this.reset(); openEventSuccess(); showToast('Booking request submitted successfully!');
+        } catch (error) {
+            console.error('Event submission error:', error);
+            showToast('Network error. Please check your connection and try again.', 'error');
+        } finally {
+            btn.disabled = false; spinner.classList.add('hidden'); btnText.textContent = 'Submit Booking Request';
+        }
+    });
+
+    // ===== TOAST NOTIFICATION =====
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.innerHTML = `<div class="flex items-center gap-3"><svg class="w-5 h-5 ${type === 'success' ? 'text-green-500' : 'text-red-500'} flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${type === 'success' ? 'M5 13l4 4L19 7' : 'M6 18L18 6M6 6l12 12'}"/></svg><span class="text-sm">${message}</span></div>`;
+        container.appendChild(toast);
+        setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateY(-20px)'; toast.style.transition = 'all 0.3s ease'; setTimeout(() => toast.remove(), 300); }, 2500);
+    }
+
+    // ===== INITIALIZATION =====
+    function init() {
+        renderCategories();
+        updateCartUI();
+        loadMenu(); // Load menu immediately
+        window.addEventListener('resize', () => {
+            const headerHeight = document.getElementById('header').offsetHeight;
+            const categoriesNav = document.getElementById('categories');
+            if (categoriesNav) categoriesNav.style.top = `${headerHeight}px`;
+            // Update menu layout on resize
+            const activeCategory = document.querySelector('.category-btn.active')?.dataset?.category || 'all';
+            renderMenu(activeCategory);
+        });
+        // Initial layout update for mobile
+        setTimeout(() => {
+            const activeCategory = document.querySelector('.category-btn.active')?.dataset?.category || 'all';
+            renderMenu(activeCategory);
+        }, 100);
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
